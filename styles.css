@@ -1,0 +1,58 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #333;
+}
+
+img {
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+}
+
+a {
+  color: rgb(255, 0, 255);
+}
+
+#speech {
+  position: absolute;
+  left: 114px;
+  bottom: 64px;
+  font-size: 26px;
+  text-align: center;
+  line-height: 50px;
+  color: rgb(255, 0, 255);
+  background-color: rgb(255, 255, 255);
+  border: 8px solid rgb(105, 0, 153);
+  -webkit-border-radius: 30px;
+  -moz-border-radius: 30px;
+  border-radius: 30px;
+  -webkit-box-shadow: 2px 2px 4px rgb(125, 3, 182);
+  -moz-box-shadow: 2px 2px 4px rgb(125, 3, 182);
+  box-shadow: 2px 2px 4px rgb(125, 3, 182);
+  animation: fadeout 1s;
+  visibility: hidden;
+  opacity: 0.75;
+  padding: 0px 8px;;
+  -webkit-text-stroke: 1px rgb(0, 0, 0);
+  -webkit-text-fill-color: rgb(255, 0, 255);
+}
+
+.hidden { 
+  visibility: hidden;
+}
+
+.visible {
+  visibility: visible;
+}
+
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
