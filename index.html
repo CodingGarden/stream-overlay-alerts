@@ -6,14 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>CodingGarden Twitch Alerts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
   </head>
 
   <body>
-    <img id="cj" class="visible" src="assets/cj.png"></img>
-    <img id="cj-ani" class="hidden" src="assets/cj-ani.gif"></img>
-    <p id="speech" class="speech"></p>
+    <div class="alerts" id="alerts">
+      <img id="cj-ani" src="assets/cj-ani.gif"></img>
+      <p id="speech" class="speech"></p>
+    </div>
     <script src="tmi.min.js"></script>
+    <script src="config.js"></script>
     <script src="app.js"></script>
   </body>
 
