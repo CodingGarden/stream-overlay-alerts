@@ -5,19 +5,20 @@ const speechBubble = document.getElementById("speech");
 
 const messageQueue = [];
 
-function playAlertSound() {
-  const sound = new Audio('https://cg-sub-count.now.sh/media/single-drop.b1e0ceec.mp3');
+const sounds = {
+  host: 'sounds/drop.mp3',
+  raid: 'sounds/wavey-piano-with-marimba.mp3',
+  sub: 'sounds/guitar-delay.mp3',
+  bits: 'sounds/delay-grand-arpeggio.mp3'
+};
+
+function playAlertSound(src) {
+  const sound = new Audio(src || 'sounds/drop.mp3');
 
   sound.play();
   sound.addEventListener('ended', () => {
     sound.remove();
   });
-}
-
-function playRain() {
-  playAlertSound();
-  setTimeout(playAlertSound, 500);
-  setTimeout(playAlertSound, 1000);
 }
 
 const client = new tmi.Client({
@@ -90,7 +91,7 @@ client.on('chat', (channel, userstate, message) => {
 client.on('cheer', (channel, userstate) => {
   messageQueue.push({
     message: `Thanks for the ${parseInt(userstate.bits)} bits <span class="bold">${userstate.username}</span>!`,
-    sound: true,
+    sound: sounds.bits,
   });
 });
 
@@ -111,7 +112,7 @@ client.on('subgift', (channel, username, streakMonths, recipient, methods, users
     giftTimeout = setTimeout(() => {
       messageQueue.push({
         message: `<span class="bold">${username}</span>, has gifted ${lastGiftAmount} subscription(s) to the garden!`,
-        sound: true,
+        sound: sounds.bits,
       });
       lastGiftAmount = 0;
       allRecipients = ``;
@@ -122,14 +123,14 @@ client.on('subgift', (channel, username, streakMonths, recipient, methods, users
 client.on('anongiftpaidupgrade', (channel, username, sender, userstate) => {
   messageQueue.push({
     message: `<span class="bold">${username}</span>, upgraded their subscription. (Originally from an anonymous user.)`,
-    sound: true,
+    sound: sounds.sub,
   });
 });
 
 client.on('giftpaidupgrade', (channel, username, sender, userstate) => {
   messageQueue.push({
     message: `<span class="bold">${username}</span>, upgraded their subscription. (Originally from ${sender}.)`,
-    sound: true,
+    sound: sounds.sub,
   });
 });
 
@@ -138,12 +139,12 @@ client.on('resub', (channel, username, months, message, userstate, methods) => {
   if (userstate["msg-param-should-share-streak"] = true) {
     messageQueue.push({
       message: `Thanks for re-subscribing for ${cumulativeMonths} months <span class="bold">${username}</span>.`,
-      sound: true,
+      sound: sounds.sub,
     });
   } else {
     messageQueue.push({
       message: `Thanks for re-subscribing <span class="bold">${username}</span>.`,
-      sound: true,
+      sound: sounds.sub,
     });
   }
 });
@@ -164,22 +165,21 @@ client.on('subscription', (channel, username, { prime, plan, planName }, msg, us
   }
   messageQueue.push({
     message,
-    sound: true,
+    sound: sounds.sub,
   });
 });
 
 client.on('hosted', (channel, username, viewers, autohost) => {
-  console.log('hosted...', channel, username, viewers);
   messageQueue.push({
     message: `<span class="bold">${username}</span>, has hosted with ${viewers} viewers!`,
-    sound: true,
+    sound: viewers > 1 ? sounds.host : '',
   });
 });
 
 client.on('raided', (channel, username, viewers) => {
   messageQueue.push({
     message: `<span class="bold">${username}</span>, is raiding with ${viewers} viewers!`,
-    sound: true,
+    sound: sounds.raid,
   });
 });
 
@@ -192,7 +192,7 @@ function drawSpeech() {
     const item = messageQueue.shift();
     speechBubble.innerHTML = item.message || item;
     if (item.sound) {
-      playRain();
+      playAlertSound(item.sound);
     }
     clearTimeout(speechTimer)
     alerts.style.opacity = '1';
