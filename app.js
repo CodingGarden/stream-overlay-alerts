@@ -1,4 +1,6 @@
 let greeted = {};
+let haveHosted = {};
+let haveRaided = {};
 
 const alerts = document.getElementById("alerts");
 const speechBubble = document.getElementById("speech");
@@ -170,6 +172,8 @@ client.on('subscription', (channel, username, { prime, plan, planName }, msg, us
 });
 
 client.on('hosted', (channel, username, viewers, autohost) => {
+  if (haveHosted[username]) return;
+  haveHosted[username] = true;
   messageQueue.push({
     message: `<span class="bold">${username}</span>, has hosted with ${viewers} viewers!`,
     sound: viewers > 1 ? sounds.host : '',
@@ -177,6 +181,8 @@ client.on('hosted', (channel, username, viewers, autohost) => {
 });
 
 client.on('raided', (channel, username, viewers) => {
+  if (haveRaided[username]) return;
+  haveRaided[username] = true;
   messageQueue.push({
     message: `<span class="bold">${username}</span>, is raiding with ${viewers} viewers!`,
     sound: sounds.raid,
