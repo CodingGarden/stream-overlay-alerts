@@ -2,13 +2,13 @@ body {
   margin: 0;
   padding: 0;
   background: black;
-  font-family: 'Share Tech', sans-serif;
+  font-family: 'Nova Cut', sans-serif;
   width: 100vw;
   height: 100vh;
 }
 
 a {
-  color: #56BC58;
+  color: black;
 }
 
 .alerts {
@@ -28,9 +28,9 @@ a {
   font-size: 26px;
   text-align: center;
   line-height: 50px;
-  color: #56BC58;
+  color: black;
   background-color: rgb(255, 255, 255);
-  border: 4px solid #56BC58;
+  border: 4px solid black;
   border-radius: 30px;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   padding: 0px 20px;

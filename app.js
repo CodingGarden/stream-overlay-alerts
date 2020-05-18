@@ -7,13 +7,6 @@ const speechBubble = document.getElementById("speech");
 
 const messageQueue = [];
 
-const sounds = {
-  host: 'sounds/drop.mp3',
-  raid: 'sounds/wavey-piano-with-marimba.mp3',
-  sub: 'sounds/guitar-delay.mp3',
-  bits: 'sounds/delay-grand-arpeggio.mp3'
-};
-
 function playAlertSound(src) {
   const sound = new Audio(src || 'sounds/drop.mp3');
 
@@ -23,22 +16,50 @@ function playAlertSound(src) {
   });
 }
 
+function generateMessage(message, tokens) {
+  var msg = message.message || message;
+  var msgText = "";
+  if (msg.length < 1) return "";
+  if (typeof (msg) !== "string") {
+    const placeTokens = function (item, index) {
+      var tokenText = (index < msg.length - 1) ? tokens[index] : "";
+
+      msgText += item += " " + tokenText;
+      msgText.trim();
+    }
+    msg.forEach(placeTokens);
+  } else {
+    msgText = msg;
+  }
+
+  return {
+    message: msgText,
+    sound: message.sound
+  }
+}
+
+function randomMessage(messages) {
+  return messages[Math.floor(Math.random() * messages.length)]
+}
+
 const client = new tmi.Client({
   connection: {
     secure: true,
     reconnect: true
   },
   identity: {
-		username: 'codinggarden',
-		password: config.token,
-	},
-  channels: [`codinggarden`]
+    username: config.username,
+    password: config.token,
+  },
+  channels: [config.username]
 });
 
 client.connect();
 
 client.on('connected', (channel, userstate) => {
   console.log("connected");
+  var greets = messages.initialized;
+  messageQueue.push(generateMessage(randomMessage(greets), [config.username]));
 })
 
 client.on('chat', (channel, userstate, message) => {
@@ -49,31 +70,19 @@ client.on('chat', (channel, userstate, message) => {
   //Subscriber Greets
   if (userstate.badges) {
     if (userstate.badges.hasOwnProperty('subscriber') || userstate.badges.hasOwnProperty('founder')) {
-      greets = [
-        `Subscriber <span class="bold">${userstate['display-name']}</span>, is digging in the garden again!`,
-        `Subscriber <span class="bold">${userstate['display-name']}</span>, has appeared!`,
-      ];
+      greets = messages.subGreets;
     }
     //VIP Greets
     if (userstate.badges.hasOwnProperty('vip')) {
-      greets = [
-        `VIP <span class="bold">${userstate['display-name']}</span>, has planted themselves!`,
-        `Welcome VIP <span class="bold">${userstate['display-name']}</span>, to the garden!.`,
-      ];
+      greets = messages.vipGreets;
     }
     //Moderator Greets
     if (userstate.badges.hasOwnProperty('moderator')) {
-      greets = [
-        `Pruner <span class="bold">${userstate['display-name']}</span>, has appeared in the garden!`,
-        `Sharp sheers <span class="bold">${userstate['display-name']}</span> has, keeping the hedges neat!`
-      ];
+      greets = messages.modGreets;
     }
     //Broadcaster Greets
     if (userstate.badges.hasOwnProperty('broadcaster')) {
-      greets = [
-        `Shh, CJ is talking!`,
-        'CJ, appreciates all of his seedlings!'
-      ];
+      greets = messages.broadcasterGreets
     }
     if (args[0] == "!speech") {
       if (userstate.badges.hasOwnProperty('broadcaster')) {
@@ -85,16 +94,14 @@ client.on('chat', (channel, userstate, message) => {
     if (greets.length) {
       randomGreet = Math.floor(Math.random() * greets.length)
       greeted[userstate.username] = true;
-      messageQueue.push(greets[randomGreet]);
+      messageQueue.push(generateMessage(randomMessage(greets), [userstate['display-name']]));
     }
   }
 });
 
 client.on('cheer', (channel, userstate) => {
-  messageQueue.push({
-    message: `Thanks for the ${parseInt(userstate.bits)} bits <span class="bold">${userstate.username}</span>!`,
-    sound: sounds.bits,
-  });
+  messageQueue.push(
+    generateMessage(randomMessage(messages.cheerMessages), [userstate.bits, userstate.username]));
 });
 
 
@@ -112,42 +119,26 @@ client.on('subgift', (channel, username, streakMonths, recipient, methods, users
       lastGiftAmount = 1;
     }
     giftTimeout = setTimeout(() => {
-      messageQueue.push({
-        message: `<span class="bold">${username}</span>, has gifted ${lastGiftAmount} subscription(s) to the garden!`,
-        sound: sounds.bits,
-      });
+      messageQueue.push(generateMessage(randomMessage(messages.subGiftMessages), [username, lastGiftAmount]));
       lastGiftAmount = 0;
       allRecipients = ``;
     }, 1500);
   }
 });
-
 client.on('anongiftpaidupgrade', (channel, username, sender, userstate) => {
-  messageQueue.push({
-    message: `<span class="bold">${username}</span>, upgraded their subscription. (Originally from an anonymous user.)`,
-    sound: sounds.sub,
-  });
+  messageQueue.push(generateMessage(randomMessage(messages.anonGiftPaidUpgradeMessages), [username]));
 });
 
 client.on('giftpaidupgrade', (channel, username, sender, userstate) => {
-  messageQueue.push({
-    message: `<span class="bold">${username}</span>, upgraded their subscription. (Originally from ${sender}.)`,
-    sound: sounds.sub,
-  });
+  messageQueue.push(generateMessage(randomMessage(messages.giftPaidUpgradeMessages), [username, sender]));
 });
 
 client.on('resub', (channel, username, months, message, userstate, methods) => {
   let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
-  if (userstate["msg-param-should-share-streak"] = true) {
-    messageQueue.push({
-      message: `Thanks for re-subscribing for ${cumulativeMonths} months <span class="bold">${username}</span>.`,
-      sound: sounds.sub,
-    });
+  if (userstate["msg-param-should-share-streak"] === true) {
+    messageQueue.push(generateMessage(randomMessage(messages.reSubStreakMessages), [cumulativeMonths, username]));
   } else {
-    messageQueue.push({
-      message: `Thanks for re-subscribing <span class="bold">${username}</span>.`,
-      sound: sounds.sub,
-    });
+    messageQueue.push(generateMessage(randomMessage(messages.reSubMessages), [username]));
   }
 });
 
@@ -156,37 +147,35 @@ const planTypes = {
   '3000': 'Tier 3',
 };
 
-client.on('subscription', (channel, username, { prime, plan, planName }, msg, userstate) => {
-  let message = '';
+client.on('subscription', (channel, username, { prime, plan, planName}, msg, userstate) => {
   if (prime) {
-    message = `Thanks for subscribing with Twitch Prime <span class="bold">${username}</span>!`;
+    subMessage = generateMessage(randomMessage(messages.subPrimeMessages), [username]);
   } else if (planTypes[plan]) {
-    message = `Thanks for the ${planTypes[plan]} subscription <span class="bold">${username}</span>!`;
+    subMessage = generateMessage(randomMessage(messages.subPlanMessages), [planTypes[plan], username]);
   } else {
-    message = `Thanks for the subscription <span class="bold">${username}</span>!`;
+    subMessage = generateMessage(randomMessage(messages.subGenericMessages), [username]);
   }
-  messageQueue.push({
-    message,
-    sound: sounds.sub,
-  });
+  messageQueue.push(subMessage);
 });
 
 client.on('hosted', (channel, username, viewers, autohost) => {
   if (haveHosted[username]) return;
   haveHosted[username] = true;
-  messageQueue.push({
-    message: `<span class="bold">${username}</span>, has hosted with ${viewers} viewers!`,
-    sound: viewers > 1 ? sounds.host : '',
-  });
+  var hostedMessage = generateMessage(randomMessage(messages.hostedMessages), [username, viewers]);
+  if (viewers < soundThresholds.hostMinimum) {
+    delete hostedMessage.sound;
+  }
+  messageQueue.push(hostedMessage);
 });
 
 client.on('raided', (channel, username, viewers) => {
   if (haveRaided[username]) return;
   haveRaided[username] = true;
-  messageQueue.push({
-    message: `<span class="bold">${username}</span>, is raiding with ${viewers} viewers!`,
-    sound: sounds.raid,
-  });
+  var raidedMessage = generateMessage(randomMessage(messages.raidedMessage), [username, viewers]);
+  if (viewers < soundThresholds.raidMinimum) {
+    delete raidedMessage.sound;
+  }
+  messageQueue.push(raidedMessage);
 });
 
 var speechTimer = null;
@@ -196,7 +185,12 @@ drawSpeech();
 function drawSpeech() {
   if (messageQueue.length) {
     const item = messageQueue.shift();
-    speechBubble.innerHTML = item.message || item;
+    msgText = item.message || item;
+    if (msgText.length < 1) {
+      setTimeout(drawSpeech, 2000);
+      return;
+    }
+    speechBubble.innerHTML = msgText;
     if (item.sound) {
       playAlertSound(item.sound);
     }

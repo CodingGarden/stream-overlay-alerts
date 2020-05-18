@@ -6,4 +6,5 @@
 
 ## Setup
 
-Create `config.js` and update with your oauth token.
+Create `config.js` and update with your oauth token & username.
+Customize the messages & graphics to fit with your own style.
