@@ -5,6 +5,10 @@ let haveRaided = {};
 const alerts = document.getElementById("alerts");
 const speechBubble = document.getElementById("speech");
 
+if (messageOptions.maxSpeechWidth != 0) {
+  speech.setAttribute("style","max-width:"+ messageOptions.maxSpeechWidth +"ch;white-space: normal;overflow: visible;"); 
+}
+
 const messageQueue = [];
 
 function playAlertSound(src) {
@@ -19,6 +23,7 @@ function playAlertSound(src) {
 function generateMessage(message, tokens) {
   var msg = message.message || message;
   var msgText = "";
+  var img = (message.image) ? message.image : messageGraphic.default;
   if (msg.length < 1) return "";
   if (typeof (msg) !== "string") {
     const placeTokens = function (item, index) {
@@ -32,13 +37,18 @@ function generateMessage(message, tokens) {
     msgText = msg;
   }
 
+  if (typeof(img) !== "string") {
+    img = randomItem(img);
+  }
+
   return {
     message: msgText,
-    sound: message.sound
+    sound: message.sound,
+    image: img
   }
 }
 
-function randomMessage(messages) {
+function randomItem(messages) {
   return messages[Math.floor(Math.random() * messages.length)]
 }
 
@@ -59,7 +69,7 @@ client.connect();
 client.on('connected', (channel, userstate) => {
   console.log("connected");
   var greets = messages.initialized;
-  messageQueue.push(generateMessage(randomMessage(greets), [config.username]));
+  messageQueue.push(generateMessage(randomItem(greets), [config.username]));
 })
 
 client.on('chat', (channel, userstate, message) => {
@@ -94,14 +104,15 @@ client.on('chat', (channel, userstate, message) => {
     if (greets.length) {
       randomGreet = Math.floor(Math.random() * greets.length)
       greeted[userstate.username] = true;
-      messageQueue.push(generateMessage(randomMessage(greets), [userstate['display-name']]));
+      messageQueue.push(generateMessage(randomItem(greets), [userstate['display-name']]));
     }
   }
 });
 
-client.on('cheer', (channel, userstate) => {
+client.on('cheer', (channel, userstate, message ) => {
+  message= message.substring(message.indexOf(' ')+1, message.length);
   messageQueue.push(
-    generateMessage(randomMessage(messages.cheerMessages), [userstate.bits, userstate.username]));
+    generateMessage(randomItem(messages.cheerThanks), [userstate.bits, userstate.username, userstate.username, processUserMessage(message)]));
 });
 
 
@@ -119,26 +130,26 @@ client.on('subgift', (channel, username, streakMonths, recipient, methods, users
       lastGiftAmount = 1;
     }
     giftTimeout = setTimeout(() => {
-      messageQueue.push(generateMessage(randomMessage(messages.subGiftMessages), [username, lastGiftAmount]));
+      messageQueue.push(generateMessage(randomItem(messages.subGiftMessages), [username, lastGiftAmount]));
       lastGiftAmount = 0;
       allRecipients = ``;
     }, 1500);
   }
 });
 client.on('anongiftpaidupgrade', (channel, username, sender, userstate) => {
-  messageQueue.push(generateMessage(randomMessage(messages.anonGiftPaidUpgradeMessages), [username]));
+  messageQueue.push(generateMessage(randomItem(messages.anonGiftPaidUpgradeMessages), [username]));
 });
 
 client.on('giftpaidupgrade', (channel, username, sender, userstate) => {
-  messageQueue.push(generateMessage(randomMessage(messages.giftPaidUpgradeMessages), [username, sender]));
+  messageQueue.push(generateMessage(randomItem(messages.giftPaidUpgradeMessages), [username, sender]));
 });
 
 client.on('resub', (channel, username, months, message, userstate, methods) => {
   let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
-  if (userstate["msg-param-should-share-streak"] === true) {
-    messageQueue.push(generateMessage(randomMessage(messages.reSubStreakMessages), [cumulativeMonths, username]));
+  if (userstate["msg-param-should-share-streak"] == true) {
+    messageQueue.push(generateMessage(randomItem(messages.reSubStreakMessages), [cumulativeMonths, username]));
   } else {
-    messageQueue.push(generateMessage(randomMessage(messages.reSubMessages), [username]));
+    messageQueue.push(generateMessage(randomItem(messages.reSubMessages), [username]));
   }
 });
 
@@ -149,11 +160,11 @@ const planTypes = {
 
 client.on('subscription', (channel, username, { prime, plan, planName}, msg, userstate) => {
   if (prime) {
-    subMessage = generateMessage(randomMessage(messages.subPrimeMessages), [username]);
+    subMessage = generateMessage(randomItem(messages.subPrimeMessages), [username]);
   } else if (planTypes[plan]) {
-    subMessage = generateMessage(randomMessage(messages.subPlanMessages), [planTypes[plan], username]);
+    subMessage = generateMessage(randomItem(messages.subPlanMessages), [planTypes[plan], username]);
   } else {
-    subMessage = generateMessage(randomMessage(messages.subGenericMessages), [username]);
+    subMessage = generateMessage(randomItem(messages.subGenericMessages), [username]);
   }
   messageQueue.push(subMessage);
 });
@@ -161,7 +172,7 @@ client.on('subscription', (channel, username, { prime, plan, planName}, msg, use
 client.on('hosted', (channel, username, viewers, autohost) => {
   if (haveHosted[username]) return;
   haveHosted[username] = true;
-  var hostedMessage = generateMessage(randomMessage(messages.hostedMessages), [username, viewers]);
+  var hostedMessage = generateMessage(randomItem(messages.hostedMessages), [username, viewers]);
   if (viewers < soundThresholds.hostMinimum) {
     delete hostedMessage.sound;
   }
@@ -171,7 +182,7 @@ client.on('hosted', (channel, username, viewers, autohost) => {
 client.on('raided', (channel, username, viewers) => {
   if (haveRaided[username]) return;
   haveRaided[username] = true;
-  var raidedMessage = generateMessage(randomMessage(messages.raidedMessage), [username, viewers]);
+  var raidedMessage = generateMessage(randomItem(messages.raidedMessage), [username, viewers]);
   if (viewers < soundThresholds.raidMinimum) {
     delete raidedMessage.sound;
   }
@@ -194,6 +205,11 @@ function drawSpeech() {
     if (item.sound) {
       playAlertSound(item.sound);
     }
+
+    if (item.image) {
+      document.getElementById("ani").src = item.image;
+    }
+    
     clearTimeout(speechTimer)
     alerts.style.opacity = '1';
     alerts.style.transform = 'scale(1)';
@@ -208,3 +224,19 @@ function pauseAndFade() {
   alerts.style.opacity = '0';
   alerts.style.transform = 'scale(0)';
 };
+
+function processUserMessage (userMessage) {
+  if (messageOptions.removeUserMessgeHtml === true) {
+      userMessage  = stripHTML(userMessage);
+  }
+  if (messageOptions.maxUserMessageLength !== 0 && (userMessage.length > messageOptions.maxUserMessageLength)  ) {
+    userMessage = userMessage.substring(0,messageOptions.maxUserMessageLength);
+  }
+  console.log("userMessage:"+userMessage);
+  return userMessage;
+}
+
+function stripHTML(html){
+  let doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+}

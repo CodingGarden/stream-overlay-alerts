@@ -16,6 +16,18 @@ const soundThresholds = {
   hostMinimum: 1
 }
 
+const messageOptions = {
+    removeUserMessgeHtml: false,
+    //0 means unlimited
+    maxUserMessageLength: 0, //length is set in characters
+    maxSpeechWidth:0 //max-width is set by css ch
+}
+
+const messageGraphic = {
+    default: "assets/ani.gif",
+    opt2: "assets/ani2.gif"
+}
+
 const messages = {
   examples: [
       "",
@@ -23,11 +35,12 @@ const messages = {
       ["Alerts are ready for action ", "!"],
       {
           message: [" ", " we're ready to go!"],
-          sound: sounds.host
+          sound: sounds.host,
+          image: [messageGraphic.default, messageGraphic.opt2]
       }
   ],
   
-  examples: [
+  initialized: [
     "",
     "Warmup your keyboards!",
     ["Alerts are ready for action ", "!"],
@@ -57,9 +70,10 @@ const messages = {
       'Great to see everyone chatting!'
   ],
 
-  cheerMessages: [
-      ["Thank you for the ", " bits <span class=\"bold\">", "</span>!"]
-  ],
+  cheerThanks: [
+    ["Thanks for the ", " bits <span class=\"bold\">", "</span>!<br/>"," says ", ""],
+    ["Thanks for the ", " bits <span class=\"bold\">", "</span>!"]
+],
 
   subGiftMessages: [
       ["<span class=\"bold\">", "</span>, has gifted ", " subscription(s) to the channel!"]
@@ -102,7 +116,7 @@ const messages = {
   }],
 
   raidedMessages: [{
-      message: ["<span class=\"bold\">", "</span>, has raised with ", " viewers!"],
+      message: ["<span class=\"bold\">", "</span>, has raided with ", " viewers!"],
       sound: sounds.raid,
   }]
 }

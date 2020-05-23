@@ -1,1 +1,5 @@
+.DS_Store
 config.js
+assets/*.*
+!./assets/ani.gif
+!./assets/ani2.gif
