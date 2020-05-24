@@ -138,7 +138,7 @@ client.on('giftpaidupgrade', (channel, username, sender, userstate) => {
 
 client.on('resub', (channel, username, months, message, userstate, methods) => {
   let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
-  if (userstate["msg-param-should-share-streak"] = true) {
+  if (userstate["msg-param-should-share-streak"] == true) {
     messageQueue.push({
       message: `Thanks for re-subscribing for ${cumulativeMonths} months <span class="bold">${username}</span>.`,
       sound: sounds.sub,
