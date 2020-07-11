@@ -150,11 +150,11 @@ client.on('resub', (channel, username, months, message, userstate, { prime, plan
   let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
   if (userstate["msg-param-should-share-streak"] == true) {
     if (prime) {
-      message = `Thanks for the Twitch Prime resub for ${cumulativeMonths} months <span class="bold">${username}</span>.`
+      message = `Thanks for the Twitch Prime resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
     } else if (subTypes[plan]) {
-      message = `Thanks for the ${subTypes[plan]} resub for ${cumulativeMonths} months <span class="bold">${username}</span>.`
+      message = `Thanks for the ${subTypes[plan]} resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
     } else {
-      message = `Thanks for the resub for ${cumulativeMonths} months <span class="bold">${username}</span>.`
+      message = `Thanks for the resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
     }
     messageQueue.push({
       message,
