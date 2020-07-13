@@ -29,9 +29,9 @@ const client = new tmi.Client({
     reconnect: true
   },
   identity: {
-		username: 'codinggarden',
-		password: config.token,
-	},
+    username: 'codinggarden',
+    password: config.token,
+  },
   channels: [`codinggarden`]
 });
 
@@ -102,7 +102,12 @@ let giftTimeout = null;
 let lastGifter = '';
 let lastGiftAmount = 0;
 
-client.on('subgift', (channel, username, streakMonths, recipient, methods, userstate) => {
+const planTypes = {
+  '2000': 'Tier 2',
+  '3000': 'Tier 3',
+};
+
+client.on('subgift', (channel, username, streakMonths, recipient, { prime, plan, planName }, userstate) => {
   if (subgiftCheck = `1`) {
     if (username == lastGifter) {
       clearTimeout(giftTimeout);
@@ -112,8 +117,13 @@ client.on('subgift', (channel, username, streakMonths, recipient, methods, users
       lastGiftAmount = 1;
     }
     giftTimeout = setTimeout(() => {
+      if (subTypes[plan]) {
+        message = `<span class="Bold">${username}</span>, has gifted ${lastGiftAmount} ${subTypes[plan]} subscription(s) to the garden!`
+      } else {
+        message = `<span class="bold">${username}</span>, has gifted ${lastGiftAmount} subscription(s) to the garden!`
+      }
       messageQueue.push({
-        message: `<span class="bold">${username}</span>, has gifted ${lastGiftAmount} subscription(s) to the garden!`,
+        message,
         sound: sounds.bits,
       });
       lastGiftAmount = 0;
@@ -136,25 +146,34 @@ client.on('giftpaidupgrade', (channel, username, sender, userstate) => {
   });
 });
 
-client.on('resub', (channel, username, months, message, userstate, methods) => {
+client.on('resub', (channel, username, months, message, userstate, { prime, plan, planName }) => {
   let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
   if (userstate["msg-param-should-share-streak"] == true) {
+    if (prime) {
+      message = `Thanks for the Twitch Prime resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
+    } else if (subTypes[plan]) {
+      message = `Thanks for the ${subTypes[plan]} resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
+    } else {
+      message = `Thanks for the resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
+    }
     messageQueue.push({
-      message: `Thanks for re-subscribing for ${cumulativeMonths} months <span class="bold">${username}</span>.`,
+      message,
       sound: sounds.sub,
     });
   } else {
+    if (prime) {
+      message = `Thanks for Twitch Prime resub <span class="bold">${username}</span>.`
+    } else if (subTypes[plan]) {
+      message = `Thanks for the ${subTypes[plan]} resub <span class="bold">${username}</span>.`
+    } else {
+      message = `Thanks for the resub <span class="bold">${username}</span>.`
+    }
     messageQueue.push({
-      message: `Thanks for re-subscribing <span class="bold">${username}</span>.`,
+      message,
       sound: sounds.sub,
     });
   }
 });
-
-const planTypes = {
-  '2000': 'Tier 2',
-  '3000': 'Tier 3',
-};
 
 client.on('subscription', (channel, username, { prime, plan, planName }, msg, userstate) => {
   let message = '';
@@ -164,6 +183,19 @@ client.on('subscription', (channel, username, { prime, plan, planName }, msg, us
     message = `Thanks for the ${planTypes[plan]} subscription <span class="bold">${username}</span>!`;
   } else {
     message = `Thanks for the subscription <span class="bold">${username}</span>!`;
+  }
+  messageQueue.push({
+    message,
+    sound: sounds.sub,
+  });
+});
+
+client.on('primepaidupgrade', (channel, username, { prime, plan, planName }, msg, userstate) => {
+  let message = '';
+  if (planTypes[plan]) {
+    message = `<span class="bold">${username}</span> has upgraded from a Twitch Prime sub to a ${subTypes[plan]}!`;
+  } else {
+    message = `<span class="bold">${username}</span> has upgraded from a Twitch Prime to a Tier 1 sub!`;
   }
   messageQueue.push({
     message,
