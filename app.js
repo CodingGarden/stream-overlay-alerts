@@ -117,8 +117,8 @@ client.on('subgift', (channel, username, streakMonths, recipient, { prime, plan,
       lastGiftAmount = 1;
     }
     giftTimeout = setTimeout(() => {
-      if (subTypes[plan]) {
-        message = `<span class="Bold">${username}</span>, has gifted ${lastGiftAmount} ${subTypes[plan]} subscription(s) to the garden!`
+      if (planTypes[plan]) {
+        message = `<span class="Bold">${username}</span>, has gifted ${lastGiftAmount} ${planTypes[plan]} subscription(s) to the garden!`
       } else {
         message = `<span class="bold">${username}</span>, has gifted ${lastGiftAmount} subscription(s) to the garden!`
       }
@@ -151,8 +151,8 @@ client.on('resub', (channel, username, months, message, userstate, { prime, plan
   if (userstate["msg-param-should-share-streak"] == true) {
     if (prime) {
       message = `Thanks for the Twitch Prime resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
-    } else if (subTypes[plan]) {
-      message = `Thanks for the ${subTypes[plan]} resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
+    } else if (planTypes[plan]) {
+      message = `Thanks for the ${planTypes[plan]} resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
     } else {
       message = `Thanks for the resub for ${cumulativeMonths} months <span class="bold">${username}</span>. (Current Streak: ${months})`
     }
@@ -163,8 +163,8 @@ client.on('resub', (channel, username, months, message, userstate, { prime, plan
   } else {
     if (prime) {
       message = `Thanks for Twitch Prime resub <span class="bold">${username}</span>.`
-    } else if (subTypes[plan]) {
-      message = `Thanks for the ${subTypes[plan]} resub <span class="bold">${username}</span>.`
+    } else if (planTypes[plan]) {
+      message = `Thanks for the ${planTypes[plan]} resub <span class="bold">${username}</span>.`
     } else {
       message = `Thanks for the resub <span class="bold">${username}</span>.`
     }
@@ -193,7 +193,7 @@ client.on('subscription', (channel, username, { prime, plan, planName }, msg, us
 client.on('primepaidupgrade', (channel, username, { prime, plan, planName }, msg, userstate) => {
   let message = '';
   if (planTypes[plan]) {
-    message = `<span class="bold">${username}</span> has upgraded from a Twitch Prime sub to a ${subTypes[plan]}!`;
+    message = `<span class="bold">${username}</span> has upgraded from a Twitch Prime sub to a ${planTypes[plan]}!`;
   } else {
     message = `<span class="bold">${username}</span> has upgraded from a Twitch Prime to a Tier 1 sub!`;
   }
