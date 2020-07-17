@@ -33,6 +33,22 @@ function playAlertSound(src) {
   });
 }
 
+const teamMembers = {};
+async function getTeamMembers() {
+  const response = await fetch('https://api.twitch.tv/kraken/teams/' + config.team, {
+    headers: {
+      'Client-ID': config.clientId,
+      Accept: 'application/vnd.twitchtv.v5+json',
+    },
+  });
+  const data = await response.json();
+  for (i = 0; i < data.users.length; i++) {
+    teamMembers[data.users[i].name] = true;
+  }
+}
+
+getTeamMembers();
+
 const cheermotes = {};
 let cheermoteRegex = null;
 async function getCheermotes() {
@@ -77,6 +93,11 @@ client.on('chat', (channel, userstate, message) => {
   const args = message.split(' ');
   // Regular Greets
   let greets = [];
+  if (teamMembers[userstate.username]) {
+    greets = [
+      `<img class="team-badge" src="assets/livecoders.png" />Livecoders Team Member <span class="bold">${userstate['display-name']}</span>, detected!`,
+    ]
+  }
   // Subscriber Greets
   if (userstate.badges) {
     if (userstate.badges.hasOwnProperty('subscriber') || userstate.badges.hasOwnProperty('founder')) {
