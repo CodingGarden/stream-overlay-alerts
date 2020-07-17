@@ -300,20 +300,8 @@ function drawSpeech() {
     clearTimeout(speechTimer);
     alerts.style.opacity = '1';
     alerts.style.transform = 'scale(1)';
-    if (item.extraMessage) {
-      const sayMessage = new SpeechSynthesisUtterance(item.extraMessage);
-      sayMessage.rate = 0.8;
-      sayMessage.addEventListener('end', () => {
-        speechTimer = setTimeout(pauseAndFade, 2000);
-        setTimeout(drawSpeech, 2000);
-      });
-      setTimeout(() => {
-        window.speechSynthesis.speak(sayMessage);
-      }, 2000);
-    } else {
-      speechTimer = setTimeout(pauseAndFade, 7500);
-      setTimeout(drawSpeech, item.message ? 5000 : 2000);
-    }
+    speechTimer = setTimeout(pauseAndFade, 7500);
+    setTimeout(drawSpeech, item.message ? 5000 : 2000);
   } else {
     setTimeout(drawSpeech, 2000);
   }

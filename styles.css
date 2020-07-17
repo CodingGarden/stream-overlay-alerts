@@ -36,7 +36,8 @@ a {
   padding: 0px 20px;
   /* white-space: nowrap; */
   /* overflow: hidden; */
-  text-overflow: ellipsis
+  text-overflow: ellipsis;
+  max-width: 800px;
 }
 
 .visible {
