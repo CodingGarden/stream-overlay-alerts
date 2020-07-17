@@ -33,7 +33,7 @@ function playAlertSound(src) {
   });
 }
 
-const teamMembers = [];
+const teamMembers = {};
 async function getTeamMembers() {
   const response = await fetch('https://api.twitch.tv/kraken/teams/' + config.team, {
     headers: {
@@ -43,8 +43,8 @@ async function getTeamMembers() {
   });
   const data = await response.json();
   for (i = 0; i < data.users.length; i++) {
-    teamMembers.push(data.users[i].name);
-}
+    teamMembers[data.users[i].name] = true;
+  }
 }
 
 getTeamMembers();
@@ -93,9 +93,9 @@ client.on('chat', (channel, userstate, message) => {
   const args = message.split(' ');
   // Regular Greets
   let greets = [];
-  if (teamMembers.includes(userstate.username)) {
+  if (teamMembers[userstate.username]) {
     greets = [
-      `Livecoders Team Member <span class="bold">${userstate['display-name']}</span>, detected!`,
+      `<img class="team-badge" src="assets/livecoders.png" />Livecoders Team Member <span class="bold">${userstate['display-name']}</span>, detected!`,
     ]
   }
   // Subscriber Greets

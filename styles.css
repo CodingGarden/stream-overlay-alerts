@@ -49,6 +49,10 @@ a {
   font-weight: bold;
 }
 
+.team-badge {
+  margin-top: 0.5rem;
+}
+
 .cheer-mote {
   margin: 0.5rem;
   width: 25px;
