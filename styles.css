@@ -34,8 +34,8 @@ a {
   border-radius: 30px;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   padding: 0px 20px;
-  white-space: nowrap;
-  overflow: hidden;
+  /* white-space: nowrap; */
+  /* overflow: hidden; */
   text-overflow: ellipsis
 }
 
@@ -47,4 +47,20 @@ a {
 .bold {
   color: black;
   font-weight: bold;
+}
+
+.cheer-mote {
+  margin: 0.5rem;
+  width: 25px;
+  height: 25px;
+}
+
+.cheer-message {
+  display: block;
+  max-width: 800px;
+}
+
+.cheer-message * {
+  margin-top: auto;
+  margin-bottom: auto;
 }

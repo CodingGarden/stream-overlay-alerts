@@ -1,0 +1,25 @@
+{
+  "name": "stream-overlay-alerts",
+  "version": "1.0.0",
+  "description": "Stream overlay alerts",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodingGarden/stream-overlay-alerts.git"
+  },
+  "keywords": [],
+  "author": "CJ R. <cj@null.computer> (https://w3cj.sh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodingGarden/stream-overlay-alerts/issues"
+  },
+  "homepage": "https://github.com/CodingGarden/stream-overlay-alerts#readme",
+  "devDependencies": {
+    "eslint": "^7.4.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0"
+  }
+}
