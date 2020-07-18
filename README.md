@@ -6,4 +6,4 @@
 
 ## Setup
 
-Create `config.js` and update with your oauth token and client id.
+Create `config.js` and update with your oauth token, client id, team name and streamlabs socket token.
