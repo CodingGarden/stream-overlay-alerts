@@ -108,31 +108,33 @@ client.on('chat', (channel, userstate, message) => {
   const args = message.split(' ');
   // Regular Greets
   let greets = [];
+  let teamBadge = '';
   if (teamMembers[userstate.username]) {
+    teamBadge = `<img class="team-badge" src="assets/livecoders.png" />`;
     greets = [
-      `<img class="team-badge" src="assets/livecoders.png" />Livecoders Team Member <span class="bold">${userstate['display-name']}</span>, detected!`,
-    ]
+      `${teamBadge}Livecoders Team Member <span class="bold">${userstate['display-name']}</span>, detected!`,
+    ];
   }
   // Subscriber Greets
   if (userstate.badges) {
     if (userstate.badges.hasOwnProperty('subscriber') || userstate.badges.hasOwnProperty('founder')) {
       greets = [
-        `Subscriber <span class="bold">${userstate['display-name']}</span>, is digging in the garden again!`,
-        `Subscriber <span class="bold">${userstate['display-name']}</span>, has appeared!`,
+        `Subscriber ${teamBadge}<span class="bold">${userstate['display-name']}</span>, is digging in the garden again!`,
+        `Subscriber ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has appeared!`,
       ];
     }
     // VIP Greets
     if (userstate.badges.hasOwnProperty('vip')) {
       greets = [
-        `VIP <span class="bold">${userstate['display-name']}</span>, has planted themselves!`,
-        `Welcome VIP <span class="bold">${userstate['display-name']}</span>, to the garden!.`,
+        `VIP ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has planted themselves!`,
+        `Welcome VIP ${teamBadge}<span class="bold">${userstate['display-name']}</span>, to the garden!.`,
       ];
     }
     // Moderator Greets
     if (userstate.badges.hasOwnProperty('moderator')) {
       greets = [
-        `Pruner <span class="bold">${userstate['display-name']}</span>, has appeared in the garden!`,
-        `Sharp sheers <span class="bold">${userstate['display-name']}</span> has, keeping the hedges neat!`,
+        `Pruner ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has appeared in the garden!`,
+        `Sharp sheers ${teamBadge}<span class="bold">${userstate['display-name']}</span> has, keeping the hedges neat!`,
       ];
     }
     // Broadcaster Greets
