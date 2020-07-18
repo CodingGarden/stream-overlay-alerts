@@ -3,4 +3,5 @@ const config = {
   clientId: 'abc123',
   token: 'abc123',
   team: 'abc123',
+  streamlabs: 'abc123',
 };

@@ -33,6 +33,22 @@ function playAlertSound(src) {
   });
 }
 
+const streamlabs = io(`wss://sockets.streamlabs.com?token=${config.streamlabs}`);
+streamlabs.on('event', (eventData) => {
+  if (!eventData.for || eventData.for === 'streamlabs' && eventData.type === 'donation') {
+    if (eventData.type !== "donation") return;
+    let theDonator = eventData.message[0].from;
+    let theAmount = eventData.message[0].formatted_amount;
+    let theCurrency = eventData.message[0].currency;
+    let theMessage = eventData.message[0].message;
+    messageQueue.push({
+      message: `<span class="bold">${theDonator}</span> has just donated ${theAmount} ${theCurrency}`,
+      extraMessage: theMessage ? theMessage : '',
+      sound: sounds.bits,
+    });
+  }
+});
+
 const teamMembers = {};
 async function getTeamMembers() {
   const response = await fetch('https://api.twitch.tv/kraken/teams/' + config.team, {
