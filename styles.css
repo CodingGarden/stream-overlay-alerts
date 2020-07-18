@@ -28,16 +28,16 @@ a {
   font-size: 26px;
   text-align: center;
   line-height: 50px;
-  color: #56BC58;
-  background-color: rgb(255, 255, 255);
+  /* color: #56BC58; */
+  color: white;
   border: 4px solid #56BC58;
   border-radius: 30px;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   padding: 0px 20px;
-  /* white-space: nowrap; */
-  /* overflow: hidden; */
   text-overflow: ellipsis;
   max-width: 800px;
+  margin-left: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.6);
 }
 
 .visible {
@@ -46,7 +46,7 @@ a {
 }
 
 .bold {
-  color: black;
+  color: #56BC58;
   font-weight: bold;
 }
 

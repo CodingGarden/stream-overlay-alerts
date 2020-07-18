@@ -5,6 +5,7 @@ module.exports = {
     es2020: true,
   },
   globals: {
+    io: true,
     DOMPurify: true,
     tmi: true,
     config: true,
