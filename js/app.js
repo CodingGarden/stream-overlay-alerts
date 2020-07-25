@@ -64,7 +64,7 @@ getTeamMembers();
 const cheermotes = {};
 let cheermoteRegex = null;
 async function getCheermotes() {
-  const response = await fetch('https://api.twitch.tv/helix/bits/cheermotes', {
+  const response = await fetch('https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=413856795', {
     headers: {
       Authorization: `Bearer ${config.token}`,
       'client-id': config.clientId,
