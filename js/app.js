@@ -35,14 +35,11 @@ function playAlertSound(src) {
 
 const streamlabs = io(`wss://sockets.streamlabs.com?token=${config.streamlabs}`);
 streamlabs.on('event', (eventData) => {
-  if (eventData.for === 'streamlabs' && eventData.type === 'donation') {
-    const theDonator = eventData.message[0].from;
-    const theAmount = eventData.message[0].formatted_amount;
-    const theCurrency = eventData.message[0].currency;
-    const theMessage = eventData.message[0].message;
+  if (eventData.type === 'donation') {
+    const [message] = eventData.message;
     messageQueue.push({
-      message: `<span class="bold">${theDonator}</span> has just donated ${theAmount} ${theCurrency}`,
-      extraMessage: theMessage || '',
+      message: `<span class="bold">${message.from}</span> has just donated ${message.formatted_amount} ${message.currency}`,
+      extraMessage: message.message || '',
       sound: sounds.bits,
     });
   }
