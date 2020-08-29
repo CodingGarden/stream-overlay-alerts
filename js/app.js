@@ -35,10 +35,10 @@ function playAlertSound(src) {
 
 const streamlabs = io(`wss://sockets.streamlabs.com?token=${config.streamlabs}`);
 streamlabs.on('event', (eventData) => {
-  if (eventData.type === 'donation') {
+  if (eventData.type === 'donation' || 'pledge') {
     const [message] = eventData.message;
     messageQueue.push({
-      message: `<span class="bold">${message.from}</span> has just donated ${message.formatted_amount} ${message.currency}`,
+      message: `<span class="bold">${message.from}</span> has just ${eventData.type === 'donation' ? 'donated' : 'pledged'} ${message.formatted_amount} ${message.currency}`,
       extraMessage: message.message || '',
       sound: sounds.bits,
     });
@@ -131,7 +131,7 @@ client.on('chat', (channel, userstate, message) => {
     if (userstate.badges.hasOwnProperty('moderator')) {
       greets = [
         `Pruner ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has appeared in the garden!`,
-        `Sharp sheers ${teamBadge}<span class="bold">${userstate['display-name']}</span> has, keeping the hedges neat!`,
+        `Sharp shears ${teamBadge}<span class="bold">${userstate['display-name']}</span> has, keeping the hedges neat!`,
       ];
     }
     // Broadcaster Greets
