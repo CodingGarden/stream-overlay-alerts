@@ -1,5 +1,3 @@
-const greeted = {};
-const haveHosted = {};
 const haveRaided = {};
 
 const alerts = document.getElementById('alerts');
@@ -14,17 +12,30 @@ const sounds = {
   bits: 'sounds/delay-grand-arpeggio.mp3',
 };
 
+const allVoices = window.speechSynthesis.getVoices();
+const chosenVoice = allVoices
+  .find((voice) => voice.name === 'Microsoft Mark - English (United States)')
+   || allVoices[0];
+
+const whiteList = [
+  'https://static-cdn.jtvnw.net/',
+  'https://d3aqoihi2n8ty8.cloudfront.net/',
+  'https://cdn.betterttv.net/emote/',
+  'https://cdn.frankerfacez.com/',
+];
+
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   if (node.hasAttribute('src')) {
     const src = node.getAttribute('src') || '';
     // TODO: is this always the CDN for emotes???
-    if (!src.startsWith('https://d3aqoihi2n8ty8.cloudfront.net/')) {
+    if (!whiteList.some((base) => src.startsWith(base))) {
       node.setAttribute('src', '');
     }
   }
 });
 
 function playAlertSound(src) {
+  if (!src) return;
   const sound = new Audio(src || 'sounds/drop.mp3');
 
   sound.play();
@@ -41,25 +52,10 @@ streamlabs.on('event', (eventData) => {
       message: `<span class="bold">${message.from}</span> has just donated ${message.formatted_amount} ${message.currency}`,
       extraMessage: message.message || '',
       sound: sounds.bits,
+      TTS: message.amount >= 5 ? message.message : '',
     });
   }
 });
-
-const teamMembers = {};
-async function getTeamMembers() {
-  const response = await fetch('https://api.twitch.tv/kraken/teams/' + config.team, {
-    headers: {
-      'Client-ID': config.clientId,
-      Accept: 'application/vnd.twitchtv.v5+json',
-    },
-  });
-  const data = await response.json();
-  for (i = 0; i < data.users.length; i++) {
-    teamMembers[data.users[i].name] = true;
-  }
-}
-
-getTeamMembers();
 
 const cheermotes = {};
 let cheermoteRegex = null;
@@ -73,7 +69,7 @@ async function getCheermotes() {
   const { data } = await response.json();
   let regexString = '';
   data.forEach((cheermote) => {
-    cheermotes[cheermote.prefix] = cheermote;
+    cheermotes[cheermote.prefix.toLowerCase()] = cheermote;
     cheermote.tiers.sort((a, b) => b.min_bits - a.min_bits);
     regexString += `${cheermote.prefix}\\d+|`;
   });
@@ -83,6 +79,9 @@ async function getCheermotes() {
 getCheermotes();
 
 const client = new tmi.Client({
+  options: {
+    clientId: config.clientId,
+  },
   connection: {
     secure: true,
     reconnect: true,
@@ -96,70 +95,12 @@ const client = new tmi.Client({
 
 client.connect();
 
-client.on('connected', () => {
-  console.log('connected');
-});
-
-client.on('chat', (channel, userstate, message) => {
-  if (userstate.username === 'streamlabs') return;
-  const args = message.split(' ');
-  // Regular Greets
-  let greets = [];
-  let teamBadge = '';
-  if (teamMembers[userstate.username]) {
-    teamBadge = `<img class="team-badge" src="assets/livecoders.png" />`;
-    greets = [
-      `${teamBadge}Livecoders Team Member <span class="bold">${userstate['display-name']}</span>, detected!`,
-    ];
-  }
-  // Subscriber Greets
-  if (userstate.badges) {
-    if (userstate.badges.hasOwnProperty('subscriber') || userstate.badges.hasOwnProperty('founder')) {
-      greets = [
-        `Subscriber ${teamBadge}<span class="bold">${userstate['display-name']}</span>, is digging in the garden again!`,
-        `Subscriber ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has appeared!`,
-      ];
-    }
-    // VIP Greets
-    if (userstate.badges.hasOwnProperty('vip')) {
-      greets = [
-        `VIP ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has planted themselves!`,
-        `Welcome VIP ${teamBadge}<span class="bold">${userstate['display-name']}</span>, to the garden!.`,
-      ];
-    }
-    // Moderator Greets
-    if (userstate.badges.hasOwnProperty('moderator')) {
-      greets = [
-        `Pruner ${teamBadge}<span class="bold">${userstate['display-name']}</span>, has appeared in the garden!`,
-        `Sharp sheers ${teamBadge}<span class="bold">${userstate['display-name']}</span> has, keeping the hedges neat!`,
-      ];
-    }
-    // Broadcaster Greets
-    if (userstate.badges.hasOwnProperty('broadcaster')) {
-      greets = [
-        'Shh, CJ is talking!',
-        'CJ, appreciates all of his seedlings!',
-      ];
-    }
-    if (args[0] == '!speech') {
-      if (userstate.badges.hasOwnProperty('broadcaster')) {
-        messageQueue.push(message.slice(args[0].length));
-        return;
-      }
-    }
-    if (greeted[userstate.username]) return;
-    if (greets.length) {
-      const randomGreet = Math.floor(Math.random() * greets.length);
-      greeted[userstate.username] = true;
-      messageQueue.push(greets[randomGreet]);
-    }
-  }
-});
-
-client.on('cheer', (channel, userstate, extraMessage) => {
-  const extraMessageHTML = extraMessage.replace(cheermoteRegex, (item) => {
+async function onCheer(channel, userstate, extraMessage) {
+  const originalMessage = extraMessage;
+  const parsedMessage = (await parseEmotes(extraMessage, userstate.emotes)) || extraMessage;
+  const extraMessageHTML = parsedMessage.replace(cheermoteRegex, (item) => {
     const amount = item.match(/(\d+)/)[1];
-    const cheermote = item.replace(amount, '');
+    const cheermote = item.replace(amount, '').toLowerCase();
     if (cheermotes[cheermote]) {
       const info = cheermotes[cheermote];
       const tier = info.tiers.find(({ min_bits }) => amount >= min_bits);
@@ -168,13 +109,17 @@ client.on('cheer', (channel, userstate, extraMessage) => {
     return item;
   });
   extraMessage = extraMessage.replace(cheermoteRegex, '');
+  const amount = parseInt(userstate.bits);
   messageQueue.push({
-    message: `Thanks for the ${parseInt(userstate.bits)} bits <span class="bold">${userstate.username}</span>!`,
+    message: `Thanks for the ${amount} bits <span class="bold">${userstate.username}</span>!`,
     extraMessage,
     extraMessageHTML,
-    sound: sounds.bits,
+    TTS: amount >= 500 ? originalMessage : '',
+    emotes: userstate.emotes,
+    sound: amount >= 100 ? sounds.bits : '',
   });
-});
+}
+client.on('cheer', onCheer);
 
 let giftTimeout = null;
 let lastGifter = '';
@@ -204,6 +149,7 @@ client.on('subgift', (channel, username, streakMonths, recipient, { plan }) => {
     }
     messageQueue.push({
       message,
+      // sound: lastGiftAmount >= 2 ? sounds.bits : '',
       sound: sounds.bits,
     });
     lastGiftAmount = 0;
@@ -214,18 +160,18 @@ client.on('subgift', (channel, username, streakMonths, recipient, { plan }) => {
 client.on('anongiftpaidupgrade', (channel, username) => {
   messageQueue.push({
     message: `<span class="bold">${username}</span>, upgraded their subscription. (Originally from an anonymous user.)`,
-    sound: sounds.sub,
+    sound: sounds.host,
   });
 });
 
 client.on('giftpaidupgrade', (channel, username, sender) => {
   messageQueue.push({
     message: `<span class="bold">${username}</span>, upgraded their subscription. (Originally from ${sender}.)`,
-    sound: sounds.sub,
+    sound: sounds.host,
   });
 });
 
-client.on('resub', (channel, username, months, extraMessage, userstate, { prime, plan }) => {
+client.on('resub', async (channel, username, months, extraMessage, userstate, { prime, plan }) => {
   const cumulativeMonths = ~~userstate['msg-param-cumulative-months'];
   if (userstate['msg-param-should-share-streak'] == true) {
     let message = '';
@@ -239,7 +185,7 @@ client.on('resub', (channel, username, months, extraMessage, userstate, { prime,
     messageQueue.push({
       message,
       extraMessage,
-      sound: sounds.sub,
+      sound: sounds.host,
     });
   } else {
     let message = '';
@@ -253,7 +199,8 @@ client.on('resub', (channel, username, months, extraMessage, userstate, { prime,
     messageQueue.push({
       message,
       extraMessage,
-      sound: sounds.sub,
+      extraMessageHTML: await parseEmotes(extraMessage, userstate.emotes),
+      sound: sounds.host,
     });
   }
 });
@@ -269,7 +216,7 @@ client.on('subscription', (channel, username, { prime, plan }) => {
   }
   messageQueue.push({
     message,
-    sound: sounds.sub,
+    sound: sounds.host,
   });
 });
 
@@ -282,16 +229,7 @@ client.on('primepaidupgrade', (channel, username, { plan }) => {
   }
   messageQueue.push({
     message,
-    sound: sounds.sub,
-  });
-});
-
-client.on('hosted', (channel, username, viewers) => {
-  if (haveHosted[username]) return;
-  haveHosted[username] = true;
-  messageQueue.push({
-    message: `<span class="bold">${username}</span>, has hosted with ${viewers} viewers!`,
-    sound: viewers > 2 ? sounds.host : '',
+    sound: sounds.host,
   });
 });
 
@@ -300,7 +238,7 @@ client.on('raided', (channel, username, viewers) => {
   haveRaided[username] = true;
   messageQueue.push({
     message: `<span class="bold">${username}</span>, is raiding with ${viewers} viewers!`,
-    sound: viewers > 2 ? sounds.raid : '',
+    sound: viewers >= 2 ? sounds.raid : '',
   });
 });
 
@@ -311,7 +249,7 @@ function pauseAndFade() {
   alerts.style.transform = 'scale(0)';
 }
 
-function drawSpeech() {
+async function drawSpeech() {
   if (messageQueue.length) {
     const item = messageQueue.shift();
     speechBubble.innerHTML = item.message || item;
@@ -331,6 +269,11 @@ function drawSpeech() {
     }
     if (item.sound) {
       playAlertSound(item.sound);
+    }
+    if (item.TTS) {
+      const utterThis = new SpeechSynthesisUtterance(item.TTS);
+      utterThis.voice = chosenVoice;
+      window.speechSynthesis.speak(utterThis);
     }
     clearTimeout(speechTimer);
     alerts.style.opacity = '1';
